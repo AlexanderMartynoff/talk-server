@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "connect-server"
+version = "0.0.0"
+description = "Connect Messanger Server"
+readme = "README.md"
+authors = ["Martynov Alexandr"]
+packages = [
+    {include = "connect"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+loguru = "^0.6.0"
+msgspec = "^0.14.0"
+aioconsole = "^0.6.1"
+
+[tool.poetry.scripts]
+connect-server = 'connect.server.script.server:run'
+connect-client = 'connect.server.script.client:run'
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

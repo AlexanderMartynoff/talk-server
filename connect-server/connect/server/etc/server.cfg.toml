@@ -1,0 +1,12 @@
+[description]
+name = "Connect Messanger Server"
+
+[nsq]
+url = "localhost"
+
+[server]
+ssl = true
+
+[server.worker]
+number = 1
+type = 'process'
