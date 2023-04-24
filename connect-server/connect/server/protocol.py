@@ -1,18 +1,20 @@
+import enum
+from time import time
 from uuid import uuid4
 from msgspec import Struct, field, UNSET, UnsetType as Unset
 import msgspec
 
 
+class Media(Struct, kw_only=True):
+    value: bytes
+    name: str
+
+
 class Element(Struct, kw_only=True):
     id: str = field(default_factory=uuid4)
+    time: float = field(default_factory=time)
     sender: str
     receiver: str
-
-
-class Media(Struct, kw_only=True, tag=True):
-    str: str
-    format: str
-    value: bytes
 
 
 class Message(Element, kw_only=True, tag=True):
@@ -20,28 +22,37 @@ class Message(Element, kw_only=True, tag=True):
     media: Media | Unset = UNSET
 
 
-class Handshake(Element, kw_only=True, tag=True):
-    secret: str
+class Identity(Element, kw_only=True, tag=True):
+    session: str
+    password: str
 
 
-class Ping(Element, kw_only=True, tag=True):
+class Heartbeat(Element, kw_only=True, tag=True):
     pass
 
 
-class Pong(Element, kw_only=True, tag=True):
-    pass
+class Status(Element, kw_only=True, tag=True):
+    class Value(enum.Enum):
+        ACCEPTED = enum.auto()
+        READED = enum.auto()
+
+    value: Value
+    message_id: str
 
 
-class Delivery(Element, kw_only=True, tag=True):
-    taget: str
-    reverse_id: str
+def status(message: Message, value: Status.Value) -> Status:
+    return Status(
+        sender=message.receiver,
+        receiver=message.sender,
+        message_id=message.id,
+        value=value)
 
 
 def decode(data: bytes) -> Element:
-    if data[-1] == 0:
+    if data[-1:] == b'\0':
         data = data[:-1]
 
-    return msgspec.json.decode(data, type=Message | Handshake | Ping | Pong | Delivery)
+    return msgspec.json.decode(data, type=Message | Identity | Heartbeat | Status)
 
 
 def encode(message: Message, terminate: bool = True) -> bytes:
@@ -51,7 +62,3 @@ def encode(message: Message, terminate: bool = True) -> bytes:
         data += b'\0'
 
     return data
-
-
-def delivery(message: Message) -> Delivery:
-    return Delivery(sender=message.receiver, receiver=message.sender, taget='server', reverse_id=message.id)

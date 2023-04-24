@@ -1,44 +1,63 @@
-from __future__ import annotations
+from collections import defaultdict
+from dataclasses import dataclass
 from asyncio import StreamReader, StreamWriter, IncompleteReadError, start_server, run
 from loguru import logger
-from .protocol import Message, Handshake, Ping, Pong, decode, encode, delivery
-from .broker import Broker
-from . import api
+from .protocol import Message, Identity, Heartbeat, Status, decode, encode, status
 
 
-async def _do_process(reader: StreamReader, writer: StreamWriter, broker: Broker):
-    message = decode(await reader.readuntil(b'\0'))
-
-    match message:
-        case Message(sender=sender):
-            broker.put(message)
-            writer.write(encode(delivery(message)))
-
-        case Handshake(sender=sender, secret=secret):
-            api.handshake(sender, secret)
-
-        case Ping():
-            writer.write(encode(Pong()))
-
-        case Pong():
-            writer.write(encode(Ping()))
+@dataclass
+class Pointer:
+    session: str
+    user: str
+    reder: StreamReader
+    writer: StreamWriter
 
 
-async def _process(reader: StreamReader, writer: StreamWriter):
-    while True:
-        try:
-            await _do_process(reader, writer, Broker())
-        except IncompleteReadError:
-            break
+class Manager:
+    def __init__(self, port: int, host: str) -> None:
+        self._pointers: dict[str, list[Pointer]] = defaultdict(list)
+        self._port = port
+        self._host = host
+
+    async def _manage_stream(self, reader: StreamReader, writer: StreamWriter):
+        element = decode(await reader.readuntil(b'\0'))
+
+        match element:
+            case Message(receiver=receiver):
+                writer.write(encode(status(element, Status.Value.ACCEPTED)))
+
+                for pointer in self._pointers[receiver]:
+                    try:
+                        pointer.writer.write(encode(element))
+                    except Exception:
+                        continue
+
+            case Identity(session=session, sender=sender):
+                logger.debug(f'User: "{sender}" append with session: "{session}"')
+
+                self._pointers[sender].append(Pointer(
+                    session=session,
+                    user=sender,
+                    reder=reader,
+                    writer=writer,
+                ))
+
+            case Heartbeat():
+                writer.write(encode(Heartbeat(receiver=element.sender, sender=element.receiver)))
+
+    async def on_connect(self, reader: StreamReader, writer: StreamWriter):
+        while True:
+            try:
+                await self._manage_stream(reader, writer)
+            except IncompleteReadError:
+                break
+
+    async def start(self):
+        logger.info(f'Run "Connect" server: {self._host}:{self._port}')
+
+        async with await start_server(self.on_connect, self._host, self._port) as server:
+            await server.serve_forever()
 
 
-async def start(port: int, host='0.0.0.0'):
-    server = await start_server(_process, host, port)
-
-    async with server:
-        logger.info(f'Start server on: {host}:{port}')
-        await server.serve_forever()
-
-
-def open(port):
-    run(start(port))
+def open(port: int, host: str = '0.0.0.0'):
+    run(Manager(port, host).start())
