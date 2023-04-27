@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "connect-server"
+name = "talk-server"
 version = "0.0.0"
-description = "Connect Messanger Server"
+description = "\"Talk\" Messanger Server"
 readme = "README.md"
 authors = ["Martynov Alexandr <triplustr@mail.ru>"]
 packages = [
-    {include = "connect"}
+    {include = "talk"}
 ]
 
 [tool.poetry.dependencies]
@@ -16,8 +16,8 @@ aioconsole = "^0.6.1"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.scripts]
-connect-server = 'connect.server.script.server:run'
-connect-client = 'connect.server.script.client:run'
+talk-server = 'talk.server.script.server:run'
+talk-client = 'talk.server.script.client:run'
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,4 +1,4 @@
-from .protocol import Message
+from .struct import Message
 
 
 class Broker:

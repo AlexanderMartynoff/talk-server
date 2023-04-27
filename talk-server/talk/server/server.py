@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from asyncio import StreamReader, StreamWriter, IncompleteReadError, start_server, run
 from loguru import logger
-from .protocol import Message, Identity, Heartbeat, Status, decode, encode, status
+from .struct import Message, Identity, Heartbeat, Status, decode, encode, status
 
 
 @dataclass
@@ -53,7 +53,7 @@ class Manager:
                 break
 
     async def start(self):
-        logger.info(f'Run "Connect" server: {self._host}:{self._port}')
+        logger.info(f'Run socket server: {self._host}:{self._port}')
 
         async with await start_server(self.on_connect, self._host, self._port) as server:
             await server.serve_forever()

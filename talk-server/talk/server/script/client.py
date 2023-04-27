@@ -1,5 +1,5 @@
 import argparse
-import connect.server.client
+import talk.server.client
 
 
 parser = argparse.ArgumentParser()
@@ -13,4 +13,4 @@ arguments = parser.parse_args()
 
 
 def run():
-    connect.server.client.open(arguments.host, arguments.port, arguments.user)
+    talk.server.client.open(arguments.host, arguments.port, arguments.user)

@@ -1,5 +1,5 @@
 [description]
-name = "Connect Messanger Server"
+name = "\"Talk\" Messanger Server"
 
 [nsq]
 url = "localhost"
@@ -9,4 +9,4 @@ ssl = true
 
 [server.worker]
 number = 1
-type = 'process'
+type = 'processing'

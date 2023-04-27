@@ -1,7 +1,7 @@
 import asyncio
 from uuid import uuid4
 from aioconsole import ainput
-from .protocol import Message, Element, Identity, decode, encode
+from .struct import Message, Element, Identity, decode, encode
 
 
 class UI:
