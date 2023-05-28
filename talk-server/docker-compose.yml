@@ -1,0 +1,17 @@
+services:
+  talk-server:
+    build: .
+    ports:
+      - 9090:9090
+    networks:
+      - talk
+    depends_on:
+      - redis
+  redis:
+    image: redis
+    networks:
+      - talk
+
+networks:
+  talk:
+    name: talk

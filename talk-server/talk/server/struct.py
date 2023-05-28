@@ -5,6 +5,9 @@ from msgspec import Struct, field, UNSET, UnsetType as Unset
 import msgspec
 
 
+EOM = '\0'
+
+
 class Media(Struct, kw_only=True):
     value: bytes
     name: str
@@ -23,7 +26,6 @@ class Message(Element, kw_only=True, tag=True):
 
 
 class Identity(Element, kw_only=True, tag=True):
-    session: str
     password: str
 
 
@@ -49,7 +51,7 @@ def status(message: Message, value: Status.Value) -> Status:
 
 
 def decode(data: bytes) -> Element:
-    if data[-1:] == b'\0':
+    if data[-1:] == EOM:
         data = data[:-1]
 
     return msgspec.json.decode(data, type=Message | Identity | Heartbeat | Status)
@@ -59,6 +61,6 @@ def encode(message: Message, terminate: bool = True) -> bytes:
     data = msgspec.json.encode(message)
 
     if terminate:
-        data += b'\0'
+        data += EOM
 
     return data

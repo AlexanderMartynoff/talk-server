@@ -1,11 +1,12 @@
 import asyncio
+from typing import Generator
 from uuid import uuid4
 from aioconsole import ainput
 from .struct import Message, Element, Identity, decode, encode
 
 
 class UI:
-    def __init__(self, host: str, port: int, user: str):
+    def __init__(self, host: str, port: int, user: str) -> None:
         self._session = uuid4()
 
         self._host = host
@@ -21,7 +22,7 @@ class UI:
 
         self._messages: dict[str, Element] = {}
 
-    async def start(self):
+    async def start(self) -> None:
         await self._connect()
         await self._identity()
 
@@ -30,15 +31,15 @@ class UI:
         except Exit:
             pass
 
-    async def _start_process_income_messages(self):
+    async def _start_process_income_messages(self) -> None:
         async for message in self._read():
             self._messages[message.id] = message
 
-    async def _start_process_console(self):
+    async def _start_process_console(self) -> None:
         while True:
             await self._process_console('Enter: ')
 
-    async def _process_console(self, title):
+    async def _process_console(self, title) -> None:
         value = await ainput(title)
 
         if not value:
@@ -82,17 +83,17 @@ class UI:
             case _:
                 print(f'What is this - {command}?')
 
-    async def _read(self):
+    async def _read(self) -> Generator[Element, None, None]:
         while not self._writer.is_closing():
             yield decode(await self._reader.readuntil(b'\0'))
 
-    async def _write(self, element: Element, drain=False):
+    async def _write(self, element: Element, drain=False) -> None:
         self._writer.write(encode(element))
 
         if drain:
             await self._writer.drain()
 
-    async def _connect(self):
+    async def _connect(self) -> None:
         if self._writer:
             self._writer.close()
 
@@ -107,7 +108,7 @@ class UI:
         self._reader = reader
         self._writer = writer
 
-    async def _identity(self):
+    async def _identity(self) -> None:
         await self._write(Identity(
             session=self._session,
             sender=self._user,
@@ -116,7 +117,7 @@ class UI:
         ))
 
 
-def open(host, port, user):
+def open(host, port, user) -> None:
     asyncio.run(UI(host, port, user).start())
 
 

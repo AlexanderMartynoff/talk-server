@@ -5,7 +5,7 @@ description = "\"Talk\" Messanger Server"
 readme = "README.md"
 authors = ["Martynov Alexandr <triplustr@mail.ru>"]
 packages = [
-    {include = "talk"}
+    {include = "talk"},
 ]
 
 [tool.poetry.dependencies]
@@ -16,8 +16,8 @@ aioconsole = "^0.6.1"
 typing-extensions = "^4.5.0"
 
 [tool.poetry.scripts]
-talk-server = 'talk.server.script.server:run'
-talk-client = 'talk.server.script.client:run'
+talk-server = 'talk.server.entrypoint.server:run'
+talk-client = 'talk.server.entrypoint.client:run'
 
 [build-system]
 requires = ["poetry-core"]
